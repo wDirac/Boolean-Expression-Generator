@@ -1,6 +1,6 @@
 <?php
 
-require_once('bgen_lib.php);
+require_once('bgen_lib.php');
 ini_set('memory_limit', -1);
 
 $mode = [6540,'RC','N-R'];
@@ -9,7 +9,7 @@ $operators_form = ['(',')', ' x ', ' + ', "'"];
 
 $data = gen_block($mode, $symbols, $operators_form);
 
-write('test.bn', $data);
+write('test.txt', $data);
 
 
 ?>
