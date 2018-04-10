@@ -1,5 +1,5 @@
 <?php
-
+:::
 function write($fname, $fmode, $fdata){
 	$file = fopen($fname, $fmode);
 	fwrite($file, $fdata);
