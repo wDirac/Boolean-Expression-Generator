@@ -1,62 +1,130 @@
 <?php
-:::
-function write($fname, $fmode, $fdata){
+
+function write($fname, $fdata, $fmode = 'wb'){ // no completada
+
 	$file = fopen($fname, $fmode);
 	fwrite($file, $fdata);
 	fclose($file);
-	return 1;
+	
 }
 
-function gen_block($a){
-	$ret[$a] = '';
+function read($fname, $ret_type=0, $data_len=0){ // casi completada
+	$contentAndSize = [];
+	$f_size = filesize($fname);
 
-	for($b = 0; $b < $a; $b++){
-		$output = gen_sub_block().' or ';
-		$output_final = gen_sub_block();
+	$file = fopen($fname, 'r');
+	$content = fread($file, $data_len === 0 ? $f_size : $data_len);
+	fclose($file);
 
-		$b < $a - 1 && !in_array($output, $ret) ? $ret[$b] = $output : $ret[$b] = $output_final;
+	if($ret_type === 0){
+		return $content;
+	}elseif($ret_type === 1){
+		return $f_size;
+	}elseif($ret_type === 2){
+		$contentAndSize[0] = $content;
+		$contentAndSize[1] = $f_size;
+
+		return $contentAndSize;
+	}
+}
+
+function gen_block($mode, $symbols, $operators_form){
+
+	$s_comb = pow(2, count($symbols));
+
+	if($mode[1] === 'RC' && $mode[0] > $s_comb){
+		echo 'Parametro cantidad en $mode[0] debe ser inferior o igual a '.$s_comb.' Eject Eject, autodestruction in 3,2,1....';
+		exit();
+	}
+
+	$ret = [];
+
+	for($b = 0; $b < $mode[0]; $b++){
+        
+
+		$output = gen_sublock($mode, $symbols, $operators_form).$operators_form[3];
+        
+      
+        if($b === ($mode[0] - 1)){
+
+        	if(($mode[1] === 'RC') && !in_array($output, $ret, 1)){
+
+        		$ret[$b] = str_replace($operators_form[3], '', $output);
+
+            }elseif($mode[1] === 'RC'){
+
+            	$b--;
+            	continue;
+            }
+
+            if($mode[1] === 'R'){
+            	$ret[$b] = str_replace($operators_form[3], '', $output);
+            }
+
+        }
+
+        if($b != ($mode[0] - 1)){
+
+        	if(($mode[1] === 'RC') && !in_array($output, $ret,1)){
+        		$ret[$b] = $output;
+        	}elseif($mode[1] === 'RC'){
+        		$b--;
+        		continue;
+        	}
+
+        	if($mode[1] === 'R'){
+        		$ret[$b] = $output;
+        	}
+        }
+	
+	}
+
+	$ret = implode('', $ret);
+    return $ret;
+ 
+}
+
+function gen_sublock($mode, $symbols, $operator_form){
+
+	$ret = [];
+	$s_default = ['a','v','x','f','w','6','5'];
+	$op_default = $operator_form;
+    
+    if(is_array($symbols) && (count($symbols) >= 2) && ($symbols != $s_default)){
+    	$s_default = $symbols;
+    }
+
+	$not = [$op_default[4],''];
+
+	for($a = 0; $a < count($s_default); $a++){
+
+		if($a == 0 && $mode[2] === 'N-R'){
+			$ret[$a] = $op_default[0].$s_default[$a].$not[mt_rand(0,1)].$op_default[2];
+		
+		}elseif($a == 0 && $mode[2] === 'N-L'){
+			$ret[$a] = $op_default[0].$not[mt_rand(0,1)].$s_default[$a].$op_default[2];
+		}
+
+		if($a == (count($s_default) - 1) && $mode[2] === 'N-R'){
+			$ret[$a] = $s_default[$a].$not[mt_rand(0,1)].$op_default[1];
+
+		}elseif($a == (count($s_default) - 1) && $mode[2] === 'N-L'){
+			$ret[$a] = $not[mt_rand(0,1)].$s_default[$a].$op_default[1];
+		}
+
+		if(($a != 0) && ($a != (count($s_default) - 1)) && ($mode[2] === 'N-R')){
+			$ret[$a] = $s_default[$a].$not[mt_rand(0,1)].$op_default[2];
+
+		}elseif(($a != 0) && ($a != (count($s_default) - 1)) && ($mode[2] === 'N-L')){
+
+			$ret[$a] = $not[mt_rand(0,1)].$s_default[$a].$op_default[2];
+		}
+        
 	}
     
-    write('genBlock.output', 'w', implode('',$ret));
-	return implode('',$ret);
-}
-
-function gen_sub_block(){
-	$ret[100] = '';
-	$and = 'and';
-	$r = 0;
-
-	$b = ['not q','q','not w', 'w', 'not e', 'e', 'not r', 'r','not t','t','not y', 'y', 'not u', 'u', 'not i', 'i',
-	     'not o','o','not p', 'p', 'not a', 'a', 'not s', 's','not d','d','not f', 'f', 'not g', 'g', 'not h', 'h',
-	     'not j','j','not k', 'k', 'not l', 'l', 'not z', 'z','not x','x','not c', 'c', 'not v', 'v', 'not b', 'b','not n', 'n','not m', 'm']; // 26
-
-	    for($e = 0; $e < 28; $e++){
-    	$fin_pos = 28 - $e;
-        
-    	if($e === 0){
-    		$ret[$e] = '(';
-    		goto b;
-    	}
-
-    	if($e == 26){
-    		$ret[$e] = $b[mt_rand($r, $r + 1)];
-    	}
-
-    	if($fin_pos === 1){
-    		$ret[$e] = ')';
-    	}elseif($e != 0 && $e < 26){
-    		$ret[$e] = $b[mt_rand($r, $r + 1)].' and ';
-    	}
-        
-        $r = $r + 2;
-
-        b:
-    	}
-        
-        return implode('', $ret);
+	$ret = implode('',$ret);
+	return $ret;
 
 }
-
-echo gen_block(10);
 
 ?>
